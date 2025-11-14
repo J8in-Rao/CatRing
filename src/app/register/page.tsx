@@ -35,11 +35,11 @@ export default function RegisterPage() {
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-12rem)] py-12 px-4">
       <Card className="w-full max-w-md shadow-2xl">
-        <CardHeader className="text-center">
+        <CardHeader className="text-center p-6">
           <CardTitle className="font-headline text-3xl">Create an Account</CardTitle>
           <CardDescription>Join CatRing to order or sell amazing food</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
@@ -85,7 +85,7 @@ export default function RegisterPage() {
                 control={form.control}
                 name="userType"
                 render={({ field }) => (
-                  <FormItem className="space-y-3">
+                  <FormItem className="space-y-3 pt-2">
                     <FormLabel>I want to sign up as a...</FormLabel>
                     <FormControl>
                       <RadioGroup

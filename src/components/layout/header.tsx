@@ -21,7 +21,7 @@ const navLinks = [
 export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 max-w-7xl items-center">
+      <div className="container flex h-16 max-w-7xl items-center px-4">
         <div className="mr-4 hidden md:flex">
           <Logo />
         </div>
@@ -34,17 +34,17 @@ export function Header() {
                 <span className="sr-only">Toggle Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+            <SheetContent side="left" className="w-[300px] sm:w-[400px] p-0">
               <div className="flex flex-col h-full">
-                <div className="flex-shrink-0 p-4">
+                <div className="flex-shrink-0 p-6 border-b">
                   <Logo />
                 </div>
-                <nav className="mt-8 flex flex-col gap-4 px-4">
+                <nav className="mt-6 flex flex-col gap-2 p-4">
                   {navLinks.map((link) => (
                     <Link
                       key={link.href}
                       href={link.href}
-                      className="text-lg font-medium text-foreground hover:text-primary transition-colors"
+                      className="text-lg font-medium text-foreground hover:text-primary transition-colors px-4 py-2 rounded-md hover:bg-muted"
                     >
                       {link.label}
                     </Link>
@@ -81,7 +81,7 @@ export function Header() {
                   <span className="sr-only">User Menu</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem asChild>
                   <Link href="/profile">My Profile</Link>
                 </DropdownMenuItem>

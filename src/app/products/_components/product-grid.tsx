@@ -38,18 +38,18 @@ export default function ProductGrid({ products }: { products: Product[] }) {
 
   return (
     <>
-      <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="mb-12 grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input 
             value={searchTerm} 
             onChange={(e) => setSearchTerm(e.target.value)} 
             placeholder="Search for a dish..." 
-            className="pl-10" 
+            className="pl-12 text-base" 
           />
         </div>
         <Select value={cuisineFilter} onValueChange={setCuisineFilter}>
-          <SelectTrigger>
+          <SelectTrigger className="text-base">
             <SelectValue placeholder="Filter by cuisine" />
           </SelectTrigger>
           <SelectContent>
@@ -65,9 +65,9 @@ export default function ProductGrid({ products }: { products: Product[] }) {
           ))}
         </div>
       ) : (
-        <div className="text-center py-16 border border-dashed rounded-lg">
+        <div className="text-center py-20 border border-dashed rounded-lg">
             <h2 className="text-2xl font-semibold">No Dishes Found</h2>
-            <p className="mt-2 text-muted-foreground">Try adjusting your search or filters.</p>
+            <p className="mt-3 text-muted-foreground">Try adjusting your search or filters.</p>
         </div>
       )}
     </>
@@ -96,7 +96,7 @@ function ProductCard({ product }: { product: Product }) {
           <CardDescription className="mt-2 h-10">{product.description}</CardDescription>
           <p className="mt-4 text-lg font-semibold text-primary">${product.price.toFixed(2)}</p>
         </CardContent>
-        <CardFooter className="p-4">
+        <CardFooter className="p-4 pt-0">
           <Button className="w-full" variant="default">Add to Cart</Button>
         </CardFooter>
       </Card>

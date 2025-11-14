@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 
 export default function ProfilePage() {
   return (
-    <div className="container mx-auto py-12 max-w-2xl">
-      <h1 className="font-headline text-4xl md:text-5xl font-bold mb-8">My Profile</h1>
+    <div className="container mx-auto px-4 py-12 md:py-16 max-w-2xl">
+      <h1 className="font-headline text-4xl md:text-5xl font-bold mb-12">My Profile</h1>
       <Card>
         <CardHeader>
             <CardTitle>Profile Information</CardTitle>
             <CardDescription>Update your account details here.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
             <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <Input id="name" defaultValue="Aisha Patel" />
@@ -21,7 +21,9 @@ export default function ProfilePage() {
                 <Label htmlFor="email">Email Address</Label>
                 <Input id="email" type="email" defaultValue="a.patel@example.com" />
             </div>
-            <Button className="mt-4">Save Changes</Button>
+            <div className="pt-2">
+              <Button>Save Changes</Button>
+            </div>
         </CardContent>
       </Card>
     </div>

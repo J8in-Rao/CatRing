@@ -24,7 +24,7 @@ export default async function Home() {
             className="object-cover object-center opacity-20"
           />
         )}
-        <div className="relative container mx-auto h-full flex flex-col items-center justify-center text-center">
+        <div className="relative container mx-auto px-4 h-full flex flex-col items-center justify-center text-center">
           <h1 className="font-headline text-5xl md:text-8xl font-bold tracking-tighter">
             Catering, with a<br />
             <span className="font-cursive text-primary">Personal Touch</span>
@@ -41,27 +41,27 @@ export default async function Home() {
       </section>
 
       <section id="how-it-works" className="py-20 md:py-32 bg-secondary/30">
-        <div className="container mx-auto">
+        <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto">
             <h2 className="font-headline text-3xl md:text-4xl font-bold">How It Works</h2>
             <p className="mt-4 text-lg text-muted-foreground">A seamless experience from selection to celebration.</p>
           </div>
           <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center p-4">
               <div className="flex items-center justify-center h-20 w-20 rounded-full bg-primary/10 text-primary">
                 <ChefHat className="h-10 w-10" />
               </div>
               <h3 className="mt-6 text-2xl font-headline font-semibold">Discover Caterers</h3>
               <p className="mt-2 text-muted-foreground">Browse a curated selection of talented local caterers and their unique menus.</p>
             </div>
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center p-4">
               <div className="flex items-center justify-center h-20 w-20 rounded-full bg-primary/10 text-primary">
                 <Truck className="h-10 w-10" />
               </div>
               <h3 className="mt-6 text-2xl font-headline font-semibold">Effortless Ordering</h3>
               <p className="mt-2 text-muted-foreground">Place your order online and coordinate directly with the caterer for delivery details.</p>
             </div>
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center p-4">
               <div className="flex items-center justify-center h-20 w-20 rounded-full bg-primary/10 text-primary">
                 <PartyPopper className="h-10 w-10" />
               </div>
@@ -73,7 +73,7 @@ export default async function Home() {
       </section>
 
       <section id="featured" className="py-20 md:py-32">
-        <div className="container mx-auto">
+        <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto">
             <h2 className="font-headline text-3xl md:text-4xl font-bold">Featured Dishes</h2>
             <p className="mt-4 text-lg text-muted-foreground">Handpicked selections from our most popular caterers.</p>
