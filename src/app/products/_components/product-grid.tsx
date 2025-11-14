@@ -76,7 +76,7 @@ export default function ProductGrid({ products }: { products: Product[] }) {
 
 function ProductCard({ product }: { product: Product }) {
     return (
-      <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col animate-in fade-in-50">
+      <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col animate-in fade-in-50 hover:-translate-y-2">
         <CardHeader className="p-0">
           <Link href={`/products/${product.id}`}>
             <Image
@@ -85,7 +85,7 @@ function ProductCard({ product }: { product: Product }) {
               data-ai-hint={product.image.hint}
               width={600}
               height={400}
-              className="w-full h-48 object-cover"
+              className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
             />
           </Link>
         </CardHeader>

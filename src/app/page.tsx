@@ -14,7 +14,7 @@ export default async function Home() {
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
-      <section className="relative w-full h-[80vh] bg-background">
+      <section className="relative w-full h-[70vh] bg-background">
         {heroImage && (
           <Image
             src={heroImage.imageUrl}
@@ -46,28 +46,28 @@ export default async function Home() {
             <h2 className="font-headline text-3xl md:text-4xl font-bold">How It Works</h2>
             <p className="mt-4 text-lg text-muted-foreground">A seamless experience from selection to celebration.</p>
           </div>
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
-            <div className="flex flex-col items-center p-4">
-              <div className="flex items-center justify-center h-20 w-20 rounded-full bg-primary/10 text-primary">
+          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            <Card className="bg-background/60 py-8 px-6 flex flex-col items-center">
+              <div className="flex items-center justify-center h-20 w-20 rounded-full bg-primary/10 text-primary mb-6">
                 <ChefHat className="h-10 w-10" />
               </div>
-              <h3 className="mt-6 text-2xl font-headline font-semibold">Discover Caterers</h3>
-              <p className="mt-2 text-muted-foreground">Browse a curated selection of talented local caterers and their unique menus.</p>
-            </div>
-            <div className="flex flex-col items-center p-4">
-              <div className="flex items-center justify-center h-20 w-20 rounded-full bg-primary/10 text-primary">
+              <h3 className="text-2xl font-headline font-semibold">Discover Caterers</h3>
+              <p className="mt-2 text-muted-foreground flex-grow">Browse a curated selection of talented local caterers and their unique menus.</p>
+            </Card>
+            <Card className="bg-background/60 py-8 px-6 flex flex-col items-center">
+              <div className="flex items-center justify-center h-20 w-20 rounded-full bg-primary/10 text-primary mb-6">
                 <Truck className="h-10 w-10" />
               </div>
-              <h3 className="mt-6 text-2xl font-headline font-semibold">Effortless Ordering</h3>
-              <p className="mt-2 text-muted-foreground">Place your order online and coordinate directly with the caterer for delivery details.</p>
-            </div>
-            <div className="flex flex-col items-center p-4">
-              <div className="flex items-center justify-center h-20 w-20 rounded-full bg-primary/10 text-primary">
+              <h3 className="text-2xl font-headline font-semibold">Effortless Ordering</h3>
+              <p className="mt-2 text-muted-foreground flex-grow">Place your order online and coordinate directly with the caterer for delivery details.</p>
+            </Card>
+            <Card className="bg-background/60 py-8 px-6 flex flex-col items-center">
+              <div className="flex items-center justify-center h-20 w-20 rounded-full bg-primary/10 text-primary mb-6">
                 <PartyPopper className="h-10 w-10" />
               </div>
-              <h3 className="mt-6 text-2xl font-headline font-semibold">Enjoy Your Event</h3>
-              <p className="mt-2 text-muted-foreground">Relax and enjoy delicious, home-cooked food at your gathering.</p>
-            </div>
+              <h3 className="text-2xl font-headline font-semibold">Enjoy Your Event</h3>
+              <p className="mt-2 text-muted-foreground flex-grow">Relax and enjoy delicious, home-cooked food at your gathering.</p>
+            </Card>
           </div>
         </div>
       </section>
@@ -96,7 +96,7 @@ export default async function Home() {
 
 function ProductCard({ product }: { product: Product }) {
   return (
-    <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 group">
+    <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 group hover:-translate-y-2">
       <CardHeader className="p-0">
         <Link href={`/products/${product.id}`} className="block overflow-hidden">
           <Image
@@ -105,7 +105,7 @@ function ProductCard({ product }: { product: Product }) {
             data-ai-hint={product.image.hint}
             width={600}
             height={400}
-            className="w-full h-56 object-cover transform group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-56 object-cover transform transition-transform duration-300 group-hover:scale-105"
           />
         </Link>
       </CardHeader>
