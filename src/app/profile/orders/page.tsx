@@ -35,7 +35,7 @@ export default function MyOrdersPage() {
         );
     }, [user, firestore]);
 
-    const { data: orders, isLoading } = useCollection<Omit<Order, 'id'>>(ordersQuery);
+    const { data: orders, isLoading } = useCollection<Order>(ordersQuery);
     
     const hasOrders = !isLoading && orders && orders.length > 0;
 
