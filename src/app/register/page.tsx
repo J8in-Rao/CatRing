@@ -8,28 +8,69 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useAuth, useFirestore } from "@/firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
+import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is too short"),
   email: z.string().email(),
   password: z.string().min(8, "Password must be at least 8 characters"),
-  userType: z.enum(["customer", "caterer"]),
+  role: z.enum(["user", "admin"], {
+    required_error: "You need to select a role.",
+  }),
 });
 
 export default function RegisterPage() {
+  const auth = useAuth();
+  const firestore = useFirestore();
+  const router = useRouter();
+  const { toast } = useToast();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       email: "",
       password: "",
-      userType: "customer",
+      role: "user",
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    // Handle registration logic here
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      const user = userCredential.user;
+
+      if (user) {
+        const userRef = doc(firestore, "users", user.uid);
+        const userData = {
+          name: values.name,
+          email: values.email,
+          role: values.role,
+          createdAt: serverTimestamp(),
+        };
+        
+        // Use non-blocking write
+        setDocumentNonBlocking(userRef, userData, { merge: false });
+
+        toast({
+          title: "Account Created",
+          description: "Welcome to CatRing! Please log in.",
+        });
+        router.push('/login');
+      }
+    } catch (error: any) {
+      console.error("Registration Error: ", error);
+      toast({
+        variant: "destructive",
+        title: "Registration Failed",
+        description: error.message || "An unexpected error occurred.",
+      });
+    }
   }
 
   return (
@@ -83,7 +124,7 @@ export default function RegisterPage() {
               />
               <FormField
                 control={form.control}
-                name="userType"
+                name="role"
                 render={({ field }) => (
                   <FormItem className="space-y-3 pt-2">
                     <FormLabel>I want to sign up as a...</FormLabel>
@@ -95,15 +136,15 @@ export default function RegisterPage() {
                       >
                         <FormItem className="flex items-center space-x-2 space-y-0">
                           <FormControl>
-                            <RadioGroupItem value="customer" />
+                            <RadioGroupItem value="user" />
                           </FormControl>
                           <FormLabel className="font-normal">Customer</FormLabel>
                         </FormItem>
                         <FormItem className="flex items-center space-x-2 space-y-0">
                           <FormControl>
-                            <RadioGroupItem value="caterer" />
+                            <RadioGroupItem value="admin" />
                           </FormControl>
-                          <FormLabel className="font-normal">Caterer</FormLabel>
+                          <FormLabel className="font-normal">Caterer (Admin)</FormLabel>
                         </FormItem>
                       </RadioGroup>
                     </FormControl>
@@ -111,7 +152,9 @@ export default function RegisterPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full !mt-8" variant="default">Create Account</Button>
+              <Button type="submit" className="w-full !mt-8" variant="default" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? "Creating Account..." : "Create Account"}
+              </Button>
             </form>
           </Form>
           <div className="mt-6 text-center text-sm">

@@ -3,31 +3,51 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useAuth } from "@/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(8),
-  userType: z.enum(["customer", "caterer"]),
+  password: z.string().min(1, "Password is required"),
 });
 
 export default function LoginPage() {
+  const auth = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
       password: "",
-      userType: "customer",
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    // Handle login logic here
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      await signInWithEmailAndPassword(auth, values.email, values.password);
+      toast({
+        title: "Login Successful",
+        description: "Welcome back!",
+      });
+      router.push('/');
+    } catch (error: any) {
+      console.error("Login Error: ", error);
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
+        description: error.code === 'auth/invalid-credential' 
+          ? 'Invalid email or password. Please try again.'
+          : error.message || "An unexpected error occurred.",
+      });
+    }
   }
 
   return (
@@ -66,37 +86,9 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="userType"
-                render={({ field }) => (
-                  <FormItem className="space-y-3 pt-2">
-                    <FormLabel>I am a...</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                        className="flex space-x-4"
-                      >
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="customer" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Customer</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="caterer" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Caterer</FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full !mt-8" variant="default">Login</Button>
+              <Button type="submit" className="w-full !mt-8" variant="default" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? 'Logging In...' : 'Login'}
+              </Button>
             </form>
           </Form>
           <div className="mt-6 text-center text-sm">
