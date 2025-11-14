@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, ShoppingCart, User, LogOut, Utensils, ClipboardList } from 'lucide-react';
+import { Menu, ShoppingCart, User, LogOut, Utensils, ClipboardList, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Logo } from '@/components/Logo';
@@ -24,8 +24,9 @@ const userNavLinks = [
 ];
 
 const adminNavLinks = [
+    { href: '/caterer/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/caterer/orders', label: 'Incoming Orders', icon: ClipboardList },
-    { href: '/caterer/products', label: 'Manage My Products', icon: Utensils },
+    { href: '/caterer/products', label: 'Manage Products', icon: Utensils },
 ]
 
 export function Header() {
