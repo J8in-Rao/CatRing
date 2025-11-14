@@ -31,8 +31,7 @@ export default function MyOrdersPage() {
         if (!user || !firestore) return null;
         return query(
             collection(firestore, 'orders'),
-            where('userId', '==', user.uid),
-            orderBy('createdAt', 'desc')
+            where('userId', '==', user.uid)
         );
     }, [user, firestore]);
 
