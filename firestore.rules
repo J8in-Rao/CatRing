@@ -25,10 +25,13 @@ service cloud.firestore {
       allow write: if isSignedIn() && isOwner(userId);
     }
 
-    // Products can be read by anyone, but only managed by admins.
+    // Products can be read by anyone.
+    // They can be created by any admin.
+    // They can only be updated/deleted by the admin who created them.
     match /products/{productId} {
       allow read: if true;
-      allow write: if isSignedIn() && isAdmin();
+      allow create: if isSignedIn() && isAdmin();
+      allow update, delete: if isSignedIn() && isAdmin() && resource.data.createdBy == request.auth.uid;
     }
     
     // Users can only manage their own cart items.
