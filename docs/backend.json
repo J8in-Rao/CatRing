@@ -1,301 +1,189 @@
 {
   "entities": {
-    "Caterer": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Caterer",
+    "User": {
+      "title": "User",
       "type": "object",
-      "description": "Represents a catering service provider.",
+      "description": "Represents a user in the system, either a customer or an admin.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the caterer."
-        },
         "name": {
           "type": "string",
-          "description": "Name of the catering service."
+          "description": "User full name"
         },
         "email": {
           "type": "string",
-          "description": "Email address of the caterer.",
+          "description": "Authentication email",
           "format": "email"
+        },
+        "role": {
+          "type": "string",
+          "description": "'user' or 'admin'",
+          "enum": ["user", "admin"]
         },
         "phone": {
           "type": "string",
-          "description": "Phone number of the caterer."
+          "description": "Phone number"
         },
         "address": {
           "type": "string",
-          "description": "Address of the catering service."
+          "description": "Delivery address"
         },
-        "description": {
+        "createdAt": {
           "type": "string",
-          "description": "Description of the catering service, including specialties."
+          "description": "Timestamp of user creation",
+          "format": "date-time"
         }
       },
-      "required": [
-        "id",
-        "name",
-        "email",
-        "phone",
-        "address",
-        "description"
-      ]
-    },
-    "Customer": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Customer",
-      "type": "object",
-      "description": "Represents a customer who orders catering services.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the customer."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the customer."
-        },
-        "email": {
-          "type": "string",
-          "description": "Email address of the customer.",
-          "format": "email"
-        },
-        "phone": {
-          "type": "string",
-          "description": "Phone number of the customer."
-        },
-        "address": {
-          "type": "string",
-          "description": "Address of the customer."
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "email",
-        "phone",
-        "address"
-      ]
+      "required": ["name", "email", "role", "createdAt"]
     },
     "Product": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Product",
       "type": "object",
-      "description": "Represents a catering product offered by a caterer.",
+      "description": "Represents a catering product offered.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the product."
-        },
-        "catererId": {
-          "type": "string",
-          "description": "Reference to Caterer. (Relationship: Caterer 1:N Product)"
-        },
         "name": {
           "type": "string",
-          "description": "Name of the product (e.g., Biryani, Samosa)."
+          "description": "Product name"
         },
         "description": {
           "type": "string",
-          "description": "Detailed description of the product."
+          "description": "Detailed description"
         },
         "price": {
           "type": "number",
-          "description": "Price of the product."
+          "description": "Price in INR"
         },
         "imageUrl": {
           "type": "string",
-          "description": "URL of the product image.",
+          "description": "Link to Firebase Storage",
           "format": "uri"
+        },
+        "category": {
+          "type": "string",
+          "description": "Snacks, sweets, meals, etc"
+        },
+        "createdBy": {
+          "type": "string",
+          "description": "Admin UID"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp of product creation",
+          "format": "date-time"
         }
       },
-      "required": [
-        "id",
-        "catererId",
-        "name",
-        "description",
-        "price",
-        "imageUrl"
-      ]
+      "required": ["name", "description", "price", "imageUrl", "category", "createdBy", "createdAt"]
+    },
+    "CartItem": {
+      "title": "CartItem",
+      "type": "object",
+      "description": "Represents an item within a user's shopping cart.",
+      "properties": {
+        "quantity": {
+          "type": "number"
+        },
+        "price": {
+          "type": "number"
+        },
+        "productId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "imageUrl": {
+          "type": "string"
+        }
+      },
+      "required": ["quantity", "price", "productId", "name"]
     },
     "Order": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Order",
       "type": "object",
-      "description": "Represents a customer order for catering products.",
+      "description": "Represents a customer's order.",
       "properties": {
-        "id": {
+        "userId": {
           "type": "string",
-          "description": "Unique identifier for the order."
+          "description": "Customer's UID"
         },
-        "customerId": {
-          "type": "string",
-          "description": "Reference to Customer. (Relationship: Customer 1:N Order)"
-        },
-        "orderDate": {
-          "type": "string",
-          "description": "Date and time when the order was placed.",
-          "format": "date-time"
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productId": { "type": "string" },
+              "name": { "type": "string" },
+              "quantity": { "type": "number" },
+              "price": { "type": "number" }
+            },
+            "required": ["productId", "name", "quantity", "price"]
+          }
         },
         "totalAmount": {
-          "type": "number",
-          "description": "Total amount of the order."
+          "type": "number"
         },
         "status": {
           "type": "string",
-          "description": "Status of the order (e.g., pending, confirmed, delivered)."
+          "enum": ["Pending", "Accepted", "Processing", "Out For Delivery", "Completed"]
         },
-        "deliveryAddress": {
+        "createdAt": {
           "type": "string",
-          "description": "Delivery address for the order."
+          "format": "date-time"
+        },
+        "address": {
+          "type": "string"
         }
       },
-      "required": [
-        "id",
-        "customerId",
-        "orderDate",
-        "totalAmount",
-        "status",
-        "deliveryAddress"
-      ]
+      "required": ["userId", "items", "totalAmount", "status", "createdAt", "address"]
     },
-    "OrderItem": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "OrderItem",
+    "Log": {
+      "title": "Log",
       "type": "object",
-      "description": "Represents a single item within an order.",
+      "description": "Represents a log of an important system action.",
       "properties": {
-        "id": {
+        "type": {
           "type": "string",
-          "description": "Unique identifier for the order item."
+          "description": "e.g., 'CREATE_ORDER', 'LOGIN', 'ADD_PRODUCT'"
         },
-        "orderId": {
+        "userId": {
           "type": "string",
-          "description": "Reference to Order. (Relationship: Order 1:N OrderItem)"
+          "description": "UID of user who performed action"
         },
-        "productId": {
+        "description": {
+          "type": "string"
+        },
+        "timestamp": {
           "type": "string",
-          "description": "Reference to Product. (Relationship: Product 1:N OrderItem)"
-        },
-        "quantity": {
-          "type": "number",
-          "description": "Quantity of the product in the order item."
-        },
-        "unitPrice": {
-          "type": "number",
-          "description": "Price of a single unit of the product at the time of order."
+          "format": "date-time"
         }
       },
-      "required": [
-        "id",
-        "orderId",
-        "productId",
-        "quantity",
-        "unitPrice"
-      ]
+      "required": ["type", "userId", "description", "timestamp"]
     }
   },
   "auth": {
     "providers": [
-      "password",
-      "anonymous"
+      "password"
     ]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/caterers/{catererId}",
-        "definition": {
-          "entityName": "Caterer",
-          "schema": {
-            "$ref": "#/backend/entities/Caterer"
-          },
-          "description": "Stores caterer profiles. Caterers can only manage their own profiles.",
-          "params": [
-            {
-              "name": "catererId",
-              "description": "Unique identifier for the caterer."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/customers/{customerId}",
-        "definition": {
-          "entityName": "Customer",
-          "schema": {
-            "$ref": "#/backend/entities/Customer"
-          },
-          "description": "Stores customer profiles. Customers can only manage their own profiles.",
-          "params": [
-            {
-              "name": "customerId",
-              "description": "Unique identifier for the customer."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/caterers/{catererId}/products/{productId}",
-        "definition": {
-          "entityName": "Product",
-          "schema": {
-            "$ref": "#/backend/entities/Product"
-          },
-          "description": "Stores products offered by each caterer. This establishes clear ownership and enables secure listing of products associated with a specific caterer.",
-          "params": [
-            {
-              "name": "catererId",
-              "description": "Unique identifier for the caterer."
-            },
-            {
-              "name": "productId",
-              "description": "Unique identifier for the product."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/customers/{customerId}/orders/{orderId}",
-        "definition": {
-          "entityName": "Order",
-          "schema": {
-            "$ref": "#/backend/entities/Order"
-          },
-          "description": "Stores orders placed by each customer.  This follows the established pattern for user-owned data in a hierarchical path, providing strong security.",
-          "params": [
-            {
-              "name": "customerId",
-              "description": "Unique identifier for the customer."
-            },
-            {
-              "name": "orderId",
-              "description": "Unique identifier for the order."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/orders/{orderId}/orderItems/{orderItemId}",
-        "definition": {
-          "entityName": "OrderItem",
-          "schema": {
-            "$ref": "#/backend/entities/OrderItem"
-          },
-          "description": "Stores items within an order. Data is nested to simplify queries related to specific orders. Orders are globally accessible to allow for admin features. The customerId is denormalized onto this collection from the parent. Caterers can view orderItems for orders associated with their products. An index should be used for quickly querying for orders associated with a specific catererId.",
-          "params": [
-            {
-              "name": "orderId",
-              "description": "Unique identifier for the order."
-            },
-            {
-              "name": "orderItemId",
-              "description": "Unique identifier for the order item."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "The Firestore structure is designed to facilitate a catering service application, named \"Spice Route\", focusing on Indian cuisine. It prioritizes security, scalability, and debuggability by adhering to core design principles such as Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), QAPs (Rules are not Filters), and Invariants.  \n\n**Authorization Independence:** Achieved through denormalization. For example, if `Product` access depended on `Caterer` attributes, these attributes would be copied into the `Product` document. However, in this case, direct subcollection relationships are used for ownership, making this less of a concern.\n\n**QAPs (Rules are not Filters):** The structure ensures secure `list` operations by using path-based ownership for private data and membership maps where collaboration is required. Homogeneous security posture is maintained within collections.\n\n**Explanation of the Structure:**\n*   `/caterers/{catererId}`: Stores caterer profiles. Caterers can only manage their own profiles.  \n*   `/customers/{customerId}`: Stores customer profiles. Customers can only manage their own profiles.\n*   `/caterers/{catererId}/products/{productId}`: Stores products offered by each caterer. This establishes clear ownership and enables secure listing of products associated with a specific caterer.\n*   `/customers/{customerId}/orders/{orderId}`: Stores orders placed by each customer.  This follows the established pattern for user-owned data in a hierarchical path, providing strong security.\n*   `/orders/{orderId}/orderItems/{orderItemId}`: Stores items within an order. Data is nested to simplify queries related to specific orders. Orders are globally accessible to allow for admin features. The customerId is denormalized onto this collection from the parent. Caterers can view orderItems for orders associated with their products. An index should be used for quickly querying for orders associated with a specific catererId."
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Stores user profiles and roles."
+    },
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Stores all available catering products."
+    },
+    "/carts/{userId}/items/{productId}": {
+      "schema": { "$ref": "#/entities/CartItem" },
+      "description": "Nests each user's cart items under their user ID for security."
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Stores all orders from all users."
+    },
+    "/logs/{logId}": {
+      "schema": { "$ref": "#/entities/Log" },
+      "description": "Stores logs for important system events."
+    }
   }
 }

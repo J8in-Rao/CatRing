@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Search } from 'lucide-react';
 
 import type { Product } from '@/lib/definitions';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 export default function ProductGrid({ products }: { products: Product[] }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-  const [cuisineFilter, setCuisineFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -26,15 +26,15 @@ export default function ProductGrid({ products }: { products: Product[] }) {
     };
   }, [searchTerm]);
 
-  const cuisines = ['all', ...Array.from(new Set(products.map(p => p.cuisine)))];
+  const categories = ['all', ...Array.from(new Set(products.map(p => p.category)))];
 
   const filteredProducts = useMemo(() => {
     return products.filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) || product.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
-      const matchesCuisine = cuisineFilter === 'all' || product.cuisine === cuisineFilter;
-      return matchesSearch && matchesCuisine;
+      const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
+      return matchesSearch && matchesCategory;
     });
-  }, [products, debouncedSearchTerm, cuisineFilter]);
+  }, [products, debouncedSearchTerm, categoryFilter]);
 
   return (
     <>
@@ -48,12 +48,12 @@ export default function ProductGrid({ products }: { products: Product[] }) {
             className="pl-12 text-base" 
           />
         </div>
-        <Select value={cuisineFilter} onValueChange={setCuisineFilter}>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
           <SelectTrigger className="text-base">
-            <SelectValue placeholder="Filter by cuisine" />
+            <SelectValue placeholder="Filter by category" />
           </SelectTrigger>
           <SelectContent>
-            {cuisines.map(c => <SelectItem key={c} value={c}>{c === 'all' ? 'All Cuisines' : c}</SelectItem>)}
+            {categories.map(c => <SelectItem key={c} value={c}>{c === 'all' ? 'All Categories' : c}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
@@ -76,13 +76,12 @@ export default function ProductGrid({ products }: { products: Product[] }) {
 
 function ProductCard({ product }: { product: Product }) {
     return (
-      <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col animate-in fade-in-50 hover:-translate-y-2">
+      <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col animate-in fade-in-50 hover:-translate-y-2 group">
         <CardHeader className="p-0">
           <Link href={`/products/${product.id}`}>
             <Image
-              src={product.image.url}
+              src={product.imageUrl}
               alt={product.name}
-              data-ai-hint={product.image.hint}
               width={600}
               height={400}
               className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
@@ -93,8 +92,8 @@ function ProductCard({ product }: { product: Product }) {
           <CardTitle className="font-headline text-xl">
             <Link href={`/products/${product.id}`}>{product.name}</Link>
           </CardTitle>
-          <CardDescription className="mt-2 h-10">{product.description}</CardDescription>
-          <p className="mt-4 text-lg font-semibold text-primary">${product.price.toFixed(2)}</p>
+          <p className="mt-2 text-sm text-muted-foreground h-10">{product.description}</p>
+          <p className="mt-4 text-lg font-semibold text-primary">₹{product.price.toFixed(2)}</p>
         </CardContent>
         <CardFooter className="p-4 pt-0">
           <Button className="w-full" variant="default">Add to Cart</Button>

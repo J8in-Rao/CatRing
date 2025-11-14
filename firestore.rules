@@ -1,127 +1,55 @@
-/**
- * @fileoverview Firestore Security Rules for the Spice Route Catering App.
- *
- * Core Philosophy:
- * This ruleset enforces a strict user-ownership model for caterers and customers,
- * ensuring that users can only manage their own profiles and data. Products
- * are owned by caterers and orders are owned by customers, reflecting a
- * hierarchical relationship. The OrderItems are nested under orders for simplified
- * queries, but have more complex rules for access.
- *
- * Data Structure:
- * - /caterers/{catererId}: Caterer profiles.
- * - /customers/{customerId}: Customer profiles.
- * - /caterers/{catererId}/products/{productId}: Products offered by caterers.
- * - /customers/{customerId}/orders/{orderId}: Orders placed by customers.
- * - /orders/{orderId}/orderItems/{orderItemId}: Items within an order.
- *
- * Key Security Decisions:
- * - Caterers and customers can only manage their own profiles (ownership).
- * - Products are owned by caterers.
- * - Orders are owned by customers.
- * - Listing of user profiles is disallowed.
- * - `OrderItems` have more complex read access, since the `orders` collection is globally accessible.
- *
- * Denormalization for Authorization:
- * The `customerId` will need to be denormalized onto each `OrderItem` document to
- * allow for rule-based filtering. This is required to check which orders are associated
- * with which customer.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * @description Secure caterer profiles, ensuring caterers can only manage their own profiles.
-     * @path /caterers/{catererId}
-     * @allow (create, update, delete) - A caterer with UID 'caterer_abc' can create/update/delete their own profile at /caterers/caterer_abc.
-     * @deny (create, update, delete) - A caterer with UID 'caterer_xyz' cannot create/update/delete the profile of caterer 'caterer_abc' at /caterers/caterer_abc.
-     * @principle Enforces document ownership for writes.
-     */
-    match /caterers/{catererId} {
-      allow get: if false;
-      allow list: if false;
-      allow create: if isSignedIn() && isOwner(catererId);
-      allow update: if isSignedIn() && isExistingOwner(catererId);
-      allow delete: if isSignedIn() && isExistingOwner(catererId);
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    /**
-     * @description Secure customer profiles, ensuring customers can only manage their own profiles.
-     * @path /customers/{customerId}
-     * @allow (create, update, delete) - A customer with UID 'customer_abc' can create/update/delete their own profile at /customers/customer_abc.
-     * @deny (create, update, delete) - A customer with UID 'customer_xyz' cannot create/update/delete the profile of customer 'customer_abc' at /customers/customer_abc.
-     * @principle Enforces document ownership for writes.
-     */
-    match /customers/{customerId} {
-      allow get: if false;
-      allow list: if false;
-      allow create: if isSignedIn() && isOwner(customerId);
-      allow update: if isSignedIn() && isExistingOwner(customerId);
-      allow delete: if isSignedIn() && isExistingOwner(customerId);
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isDataOwner(resourceId) {
+        return resource.data.userId == resourceId
     }
 
-    /**
-     * @description Secure products offered by each caterer.
-     * @path /caterers/{catererId}/products/{productId}
-     * @allow (create, update, delete) - A caterer with UID 'caterer_abc' can create/update/delete their own product at /caterers/caterer_abc/products/product_123.
-     * @deny (create, update, delete) - A caterer with UID 'caterer_xyz' cannot create/update/delete the product of caterer 'caterer_abc' at /caterers/caterer_abc/products/product_123.
-     * @principle Enforces document ownership for writes.
-     */
-    match /caterers/{catererId}/products/{productId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isSignedIn() && isOwner(catererId) && request.resource.data.catererId == catererId;
-      allow update: if isSignedIn() && isExistingOwner(catererId) && resource.data.catererId == catererId;
-      allow delete: if isSignedIn() && isExistingOwner(catererId) && resource.data.catererId == catererId;
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    /**
-     * @description Secure orders placed by each customer.
-     * @path /customers/{customerId}/orders/{orderId}
-     * @allow (create, update, delete) - A customer with UID 'customer_abc' can create/update/delete their own order at /customers/customer_abc/orders/order_123.
-     * @deny (create, update, delete) - A customer with UID 'customer_xyz' cannot create/update/delete the order of customer 'customer_abc' at /customers/customer_abc/orders/order_123.
-     * @principle Enforces document ownership for writes.
-     */
-    match /customers/{customerId}/orders/{orderId} {
-      allow get: if isSignedIn() && isOwner(customerId);
-      allow list: if isSignedIn() && isOwner(customerId);
-      allow create: if isSignedIn() && isOwner(customerId) && request.resource.data.customerId == customerId;
-      allow update: if isSignedIn() && isExistingOwner(customerId) && resource.data.customerId == customerId;
-      allow delete: if isSignedIn() && isExistingOwner(customerId) && resource.data.customerId == customerId;
+    // Users can only manage their own profile. Admins can read user profiles.
+    match /users/{userId} {
+      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow write: if isSignedIn() && isOwner(userId);
     }
 
-    /**
-     * @description Secure order items within an order.
-     * @path /orders/{orderId}/orderItems/{orderItemId}
-     * @allow (create) - Any authenticated user can create orderItems for an order
-     * @allow (get, list) - Any authenticated user can read orderItems for an order if they are the customer
-     * @allow (update, delete) - No one can update or delete orderItems
-     * @principle Requires customerId denormalized on the OrderItem
-     */
-    match /orders/{orderId}/orderItems/{orderItemId} {
-      allow get: if isSignedIn() && isCustomerForOrder(orderId);
-      allow list: if isSignedIn() && isCustomerForOrder(orderId);
-      allow create: if isSignedIn() && request.resource.data.orderId == orderId;
-      allow update: if false;
-      allow delete: if false;
+    // Products can be read by anyone, but only managed by admins.
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isSignedIn() && isAdmin();
     }
-  }
+    
+    // Users can only manage their own cart items.
+    match /carts/{userId}/items/{productId} {
+      allow read, write: if isSignedIn() && isOwner(userId);
+    }
 
-  // Helper functions
-  function isSignedIn() {
-    return request.auth != null;
-  }
+    // Orders can be created by any signed-in user.
+    // They can be read by the user who created the order or by an admin.
+    // Only admins can update the order status.
+    match /orders/{orderId} {
+      allow read: if isSignedIn() && (isDataOwner(request.auth.uid) || isAdmin());
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && isAdmin();
+      allow delete: if false; // Orders should probably not be deleted
+    }
 
-  function isOwner(userId) {
-    return request.auth.uid == userId;
-  }
-
-  function isExistingOwner(userId) {
-    return isOwner(userId) && resource != null;
-  }
-
-  function isCustomerForOrder(orderId) {
-      return get(/databases/$(database)/documents/orders/$(orderId)).data.customerId == request.auth.uid;
+    // Logs can be created by any signed-in user. They cannot be read, updated or deleted.
+    match /logs/{logId} {
+      allow read, update, delete: if false;
+      allow create: if isSignedIn();
+    }
   }
 }
