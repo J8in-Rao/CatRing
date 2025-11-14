@@ -1,15 +1,28 @@
 'use client';
 
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, query, where, orderBy } from "firebase/firestore";
+import { collection, query, where, doc } from "firebase/firestore";
 import { Order } from "@/lib/definitions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Package, ShoppingBag } from "lucide-react";
+import { Package, ShoppingBag, XCircle } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useState } from "react";
+import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { useToast } from "@/hooks/use-toast";
 
 function formatTimestamp(timestamp: any): string {
     if (!timestamp || !timestamp.toDate) {
@@ -26,6 +39,10 @@ function formatTimestamp(timestamp: any): string {
 export default function MyOrdersPage() {
     const { user } = useUser();
     const firestore = useFirestore();
+    const { toast } = useToast();
+
+    const [isCancelAlertOpen, setIsCancelAlertOpen] = useState(false);
+    const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
 
     const ordersQuery = useMemoFirebase(() => {
         if (!user || !firestore) return null;
@@ -38,6 +55,26 @@ export default function MyOrdersPage() {
     const { data: orders, isLoading } = useCollection<Order>(ordersQuery);
     
     const hasOrders = !isLoading && orders && orders.length > 0;
+
+    const handleOpenCancelDialog = (order: Order) => {
+        setOrderToCancel(order);
+        setIsCancelAlertOpen(true);
+    };
+
+    const handleCancelOrder = () => {
+        if (!orderToCancel || !firestore) return;
+
+        const orderRef = doc(firestore, 'orders', orderToCancel.id);
+        setDocumentNonBlocking(orderRef, { status: 'Cancelled' }, { merge: true });
+
+        toast({
+            title: "Order Cancelled",
+            description: `Order #${orderToCancel.id.slice(0, 7)} has been cancelled.`,
+        });
+
+        setIsCancelAlertOpen(false);
+        setOrderToCancel(null);
+    };
 
     return (
         <div className="container mx-auto px-4 py-12 md:py-16">
@@ -56,14 +93,18 @@ export default function MyOrdersPage() {
                 <div className="space-y-8">
                     {orders.map((order) => (
                         <Card key={order.id} className="shadow-md">
-                            <CardHeader className="flex flex-row items-center justify-between">
+                            <CardHeader className="flex flex-row items-start justify-between gap-4">
                                 <div>
                                     <CardTitle>Order #{order.id.slice(0, 7)}</CardTitle>
                                     <CardDescription>Placed on {formatTimestamp(order.createdAt)}</CardDescription>
                                 </div>
                                 <Badge 
                                     variant={order.status === 'Completed' ? 'default' : 'secondary'}
-                                    className={`text-sm ${order.status === 'Completed' ? 'bg-green-100 text-green-800' : ''}`}
+                                    className={`text-sm ${
+                                        order.status === 'Completed' ? 'bg-green-100 text-green-800' : ''
+                                    } ${
+                                        order.status === 'Cancelled' ? 'bg-red-100 text-red-800' : ''
+                                    }`}
                                 >
                                     {order.status}
                                 </Badge>
@@ -85,8 +126,14 @@ export default function MyOrdersPage() {
                                     <p className="text-muted-foreground">Delivery to: <span className="font-medium text-foreground">{order.address}</span></p>
                                 </div>
                             </CardContent>
-                            <CardFooter className="bg-muted/50 p-4 flex justify-end">
-                                <p className="text-lg font-bold">Total: ₹{order.totalAmount.toFixed(2)}</p>
+                            <CardFooter className="bg-muted/50 p-4 flex justify-between items-center">
+                                {order.status === 'Pending' && (
+                                    <Button variant="destructive" size="sm" onClick={() => handleOpenCancelDialog(order)}>
+                                        <XCircle className="mr-2 h-4 w-4" />
+                                        Cancel Order
+                                    </Button>
+                                )}
+                                <p className="text-lg font-bold ml-auto">Total: ₹{order.totalAmount.toFixed(2)}</p>
                             </CardFooter>
                         </Card>
                     ))}
@@ -107,6 +154,23 @@ export default function MyOrdersPage() {
                     </CardContent>
                 </Card>
             )}
+
+            <AlertDialog open={isCancelAlertOpen} onOpenChange={setIsCancelAlertOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure you want to cancel this order?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. You will not be charged for this order.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Back to Safety</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleCancelOrder} className="bg-destructive hover:bg-destructive/90">
+                            Yes, Cancel Order
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
