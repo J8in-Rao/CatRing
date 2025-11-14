@@ -1,0 +1,52 @@
+{
+  "placeholderImages": [
+    {
+      "id": "hero-bg",
+      "description": "A vibrant spread of Indian spices on a dark background.",
+      "imageUrl": "https://images.unsplash.com/flagged/photo-1553617569-8ef7a8da3146?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxpbmRpYW4lMjBzcGljZXN8ZW58MHx8fHwxNzYzMTM3NjI0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "indian spices"
+    },
+    {
+      "id": "butter-chicken",
+      "description": "A delicious bowl of butter chicken.",
+      "imageUrl": "https://images.unsplash.com/photo-1610057099443-fde8c4d50f91?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxidXR0ZXIlMjBjaGlja2VufGVufDB8fHx8MTc2MzExMTIzMHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "butter chicken"
+    },
+    {
+      "id": "palak-paneer",
+      "description": "A rich and creamy palak paneer dish.",
+      "imageUrl": "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxwYWxhayUyMHBhbmVlcnxlbnwwfHx8fDE3NjMxMTEyMzB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "palak paneer"
+    },
+    {
+      "id": "veg-biryani",
+      "description": "A fragrant vegetable biryani.",
+      "imageUrl": "https://images.unsplash.com/photo-1747518596371-ab78bd612d09?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxiaXJ5YW5pJTIwcmljZXxlbnwwfHx8fDE3NjMxMTEyMzB8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "biryani rice"
+    },
+    {
+      "id": "samosa",
+      "description": "Crispy samosas with chutney.",
+      "imageUrl": "https://images.unsplash.com/photo-1601050690117-94f5f6fa8bd7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxzYW1vc2ElMjBmb29kfGVufDB8fHx8MTc2MzEzNzYyNHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "samosa food"
+    },
+    {
+      "id": "gulab-jamun",
+      "description": "Sweet gulab jamun in syrup.",
+      "imageUrl": "https://images.unsplash.com/photo-1680993032090-1ef7ea9b51e5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxndWxhYiUyMGphbXVufGVufDB8fHx8MTc2MzA1MjMxMXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "gulab jamun"
+    },
+    {
+      "id": "dosa",
+      "description": "A South Indian dosa with sambar and chutney.",
+      "imageUrl": "https://images.unsplash.com/photo-1643268972535-a2b100ff3632?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxkb3NhJTIwZm9vZHxlbnwwfHx8fDE3NjMxMTk4MTJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "dosa food"
+    },
+    {
+      "id": "home-hero",
+      "description": "People enjoying a catered event at home.",
+      "imageUrl": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjYXRlcmluZyUyMGV2ZW50fGVufDB8fHx8MTc2MzgwMjU1OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "catering event"
+    }
+  ]
+}
