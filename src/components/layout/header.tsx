@@ -18,6 +18,7 @@ import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { User as UserProfile } from '@/lib/definitions';
 import { doc } from 'firebase/firestore';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 const userNavLinks = [
   { href: '/products', label: 'Menu' },
@@ -116,6 +117,7 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Button asChild variant="ghost" size="icon">
               <Link href="/cart">
                 <ShoppingCart className="h-5 w-5" />
@@ -146,7 +148,7 @@ export function Header() {
                       <Link href="/profile/orders">My Orders</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className="text-red-500 focus:text-red-500 focus:bg-red-50">
+                    <DropdownMenuItem onClick={handleLogout} className="text-red-500 focus:text-red-500 focus:bg-red-50 dark:focus:bg-red-900/50">
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Log out</span>
                     </DropdownMenuItem>
