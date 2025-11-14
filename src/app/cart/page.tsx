@@ -1,18 +1,32 @@
 'use client';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, doc } from "firebase/firestore";
+import { collection, doc, writeBatch, serverTimestamp, getDocs } from "firebase/firestore";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { deleteDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
-import { CartItem } from "@/lib/definitions";
+import { deleteDocumentNonBlocking, setDocumentNonBlocking, addDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { CartItem, Order, User as UserProfile } from "@/lib/definitions";
 import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
+import { useDoc } from "@/firebase/firestore/use-doc";
+import { useState } from "react";
 
 export default function CartPage() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
+  const router = useRouter();
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+
+
+  const userProfileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, `users/${user.uid}`);
+  }, [firestore, user]);
+  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
 
   const cartItemsRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -28,7 +42,7 @@ export default function CartPage() {
   const cartIsEmpty = !cartItems || cartItems.length === 0;
 
   const updateQuantity = (item: CartItem, newQuantity: number) => {
-    if (!user) return;
+    if (!user || !firestore) return;
     const itemRef = doc(firestore, `carts/${user.uid}/items/${item.id}`);
     if (newQuantity <= 0) {
       deleteDocumentNonBlocking(itemRef);
@@ -38,10 +52,70 @@ export default function CartPage() {
   };
 
   const removeItem = (itemId: string) => {
-    if (!user) return;
+    if (!user || !firestore) return;
     const itemRef = doc(firestore, `carts/${user.uid}/items/${itemId}`);
     deleteDocumentNonBlocking(itemRef);
-  }
+  };
+
+  const handleCheckout = async () => {
+    if (!user || !firestore || !cartItems || cartIsEmpty) return;
+    
+    if (!userProfile?.address) {
+        toast({
+            variant: "destructive",
+            title: "Address Required",
+            description: "Please add a delivery address to your profile before placing an order.",
+        });
+        router.push('/profile');
+        return;
+    }
+    
+    setIsPlacingOrder(true);
+
+    const orderPayload: Omit<Order, 'id'> = {
+        userId: user.uid,
+        items: cartItems.map(item => ({
+            productId: item.productId,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+        })),
+        totalAmount: total,
+        status: "Pending",
+        createdAt: serverTimestamp(),
+        address: userProfile.address,
+    };
+
+    try {
+        const ordersRef = collection(firestore, "orders");
+        await addDoc(ordersRef, orderPayload);
+        
+        // Clear the cart after order placement
+        const cartSnapshot = await getDocs(cartItemsRef);
+        const batch = writeBatch(firestore);
+        cartSnapshot.docs.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+        await batch.commit();
+
+        toast({
+            title: "Order Placed!",
+            description: "Your order has been successfully submitted.",
+        });
+
+        router.push('/profile/orders');
+
+    } catch (error) {
+        console.error("Error placing order:", error);
+        toast({
+            variant: "destructive",
+            title: "Order Failed",
+            description: "There was a problem placing your order. Please try again.",
+        });
+        setIsPlacingOrder(false);
+    }
+  };
+
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-16">
@@ -109,7 +183,9 @@ export default function CartPage() {
                     </div>
                 </CardContent>
                 <CardFooter>
-                    <Button className="w-full" size="lg">Proceed to Checkout</Button>
+                    <Button className="w-full" size="lg" onClick={handleCheckout} disabled={isPlacingOrder}>
+                        {isPlacingOrder ? 'Placing Order...' : 'Proceed to Checkout'}
+                    </Button>
                 </CardFooter>
             </Card>
         </div>
