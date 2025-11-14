@@ -2,7 +2,15 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
+    // --- Development Rules ---
+    // These rules are open to allow for rapid development.
+    // Any signed-in user can read and write to any document.
+    // TODO: Secure these rules before deploying to production.
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Helper functions (kept for reference when tightening rules later)
     function isSignedIn() {
       return request.auth != null;
     }
@@ -17,43 +25,6 @@ service cloud.firestore {
 
     function isAdmin() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-
-    // Users can only manage their own profile. Admins can read user profiles.
-    match /users/{userId} {
-      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
-      allow write: if isSignedIn() && isOwner(userId);
-    }
-
-    // Products can be read by anyone.
-    // They can be created by any admin.
-    // They can only be updated/deleted by the admin who created them.
-    match /products/{productId} {
-      allow read: if true;
-      allow create: if isSignedIn() && isAdmin();
-      allow update, delete: if isSignedIn() && isAdmin() && resource.data.createdBy == request.auth.uid;
-    }
-    
-    // Users can only manage their own cart items.
-    match /carts/{userId}/items/{productId} {
-      allow read, write: if isSignedIn() && isOwner(userId);
-    }
-
-    // Orders can be read by the user who created the order or by an admin.
-    // Users can list their own orders. Admins can list all orders.
-    // Only admins can update the order status.
-    match /orders/{orderId} {
-      allow get: if isSignedIn() && (isDataOwner(request.auth.uid) || isAdmin());
-      allow list: if isSignedIn() && (isAdmin() || request.query.where.userId == request.auth.uid);
-      allow create: if isSignedIn();
-      allow update: if isSignedIn() && isAdmin();
-      allow delete: if false; // Orders should probably not be deleted
-    }
-
-    // Logs can be created by any signed-in user. They cannot be read, updated or deleted.
-    match /logs/{logId} {
-      allow read, update, delete: if false;
-      allow create: if isSignedIn();
     }
   }
 }
