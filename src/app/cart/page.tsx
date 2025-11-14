@@ -1,16 +1,55 @@
+'use client';
+import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
+import { collection, doc } from "firebase/firestore";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShoppingCart } from "lucide-react";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { deleteDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { CartItem } from "@/lib/definitions";
+import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import Link from "next/link";
 
 export default function CartPage() {
-  // In a real app, cart items would be fetched from context or state
-  const cartIsEmpty = true;
+  const { user } = useUser();
+  const firestore = useFirestore();
+
+  const cartItemsRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return collection(firestore, `carts/${user.uid}/items`);
+  }, [firestore, user]);
+
+  const { data: cartItems, isLoading } = useCollection<Omit<CartItem, 'id'>>(cartItemsRef);
+
+  const subtotal = cartItems?.reduce((acc, item) => acc + item.price * item.quantity, 0) || 0;
+  const tax = subtotal * 0.05; // 5% tax
+  const total = subtotal + tax;
+  
+  const cartIsEmpty = !cartItems || cartItems.length === 0;
+
+  const updateQuantity = (item: CartItem, newQuantity: number) => {
+    if (!user) return;
+    const itemRef = doc(firestore, `carts/${user.uid}/items/${item.id}`);
+    if (newQuantity <= 0) {
+      deleteDocumentNonBlocking(itemRef);
+    } else {
+      setDocumentNonBlocking(itemRef, { quantity: newQuantity }, { merge: true });
+    }
+  };
+
+  const removeItem = (itemId: string) => {
+    if (!user) return;
+    const itemRef = doc(firestore, `carts/${user.uid}/items/${itemId}`);
+    deleteDocumentNonBlocking(itemRef);
+  }
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-16">
       <h1 className="font-headline text-4xl md:text-5xl font-bold mb-12">Shopping Cart</h1>
-      {cartIsEmpty ? (
+      
+      {isLoading ? (
+        <p>Loading your cart...</p> // Replace with a skeleton loader if desired
+      ) : cartIsEmpty ? (
         <Card className="text-center py-20 border-dashed">
             <CardHeader>
                 <div className="mx-auto bg-secondary rounded-full h-20 w-20 flex items-center justify-center">
@@ -26,7 +65,54 @@ export default function CartPage() {
             </CardContent>
         </Card>
       ) : (
-        <p>Cart items would be displayed here.</p>
+        <div className="grid md:grid-cols-3 gap-12 items-start">
+            <div className="md:col-span-2 space-y-6">
+                {cartItems.map((item) => (
+                    <Card key={item.id} className="flex items-center p-4">
+                        <Image src={item.imageUrl} alt={item.name} width={100} height={100} className="rounded-md object-cover" />
+                        <div className="ml-6 flex-grow">
+                            <h3 className="font-semibold text-lg">{item.name}</h3>
+                            <p className="text-muted-foreground">₹{item.price.toFixed(2)}</p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="flex items-center border rounded-md">
+                                <Button variant="ghost" size="icon" onClick={() => updateQuantity(item, item.quantity - 1)}><Minus className="w-4 h-4" /></Button>
+                                <span className="w-10 text-center font-bold">{item.quantity}</span>
+                                <Button variant="ghost" size="icon" onClick={() => updateQuantity(item, item.quantity + 1)}><Plus className="w-4 h-4" /></Button>
+                            </div>
+                            <p className="font-semibold w-20 text-right">₹{(item.price * item.quantity).toFixed(2)}</p>
+                            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => removeItem(item.id)}>
+                                <Trash2 className="w-5 h-5" />
+                            </Button>
+                        </div>
+                    </Card>
+                ))}
+            </div>
+            <Card className="sticky top-24 shadow-lg">
+                <CardHeader>
+                    <CardTitle>Order Summary</CardTitle>
+                    <CardDescription>Review your order before proceeding to checkout.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex justify-between">
+                        <span>Subtotal</span>
+                        <span className="font-medium">₹{subtotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span>Taxes (5%)</span>
+                        <span className="font-medium">₹{tax.toFixed(2)}</span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between font-bold text-lg">
+                        <span>Total</span>
+                        <span>₹{total.toFixed(2)}</span>
+                    </div>
+                </CardContent>
+                <CardFooter>
+                    <Button className="w-full" size="lg">Proceed to Checkout</Button>
+                </CardFooter>
+            </Card>
+        </div>
       )}
     </div>
   );

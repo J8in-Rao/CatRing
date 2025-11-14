@@ -1,25 +1,57 @@
 'use client';
-import { useDoc, useFirestore, useMemoFirebase } from "@/firebase";
-import { doc } from "firebase/firestore";
-import { useParams } from "next/navigation";
+import { useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
+import { collection, doc } from "firebase/firestore";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Clock, Minus, Plus, ShoppingCart, Star } from "lucide-react";
 import { useState } from "react";
 import { Product } from "@/lib/definitions";
 import { Skeleton } from "@/components/ui/skeleton";
+import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ProductDetailPage() {
     const { id } = useParams();
     const firestore = useFirestore();
+    const { user } = useUser();
+    const router = useRouter();
+    const { toast } = useToast();
 
     const productRef = useMemoFirebase(() => {
         if (!firestore || !id) return null;
-        return doc(firestore, `products/${id}`);
+        return doc(firestore, `products/${id as string}`);
     }, [firestore, id]);
 
     const { data: product, isLoading } = useDoc<Omit<Product, 'id'>>(productRef);
     const [quantity, setQuantity] = useState(1);
+
+    const increaseQuantity = () => setQuantity(prev => prev + 1);
+    const decreaseQuantity = () => setQuantity(prev => Math.max(1, prev - 1));
+
+    const handleAddToCart = () => {
+        if (!user) {
+            router.push('/login');
+            return;
+        }
+        if (!product) return;
+
+        const cartItemRef = doc(firestore, `carts/${user.uid}/items/${id as string}`);
+        const cartItemData = {
+            productId: id,
+            name: product.name,
+            price: product.price,
+            imageUrl: product.imageUrl,
+            quantity: quantity,
+        };
+
+        setDocumentNonBlocking(cartItemRef, cartItemData, { merge: true });
+
+        toast({
+            title: "Added to Cart",
+            description: `${quantity} x ${product.name} has been added to your cart.`,
+        });
+    };
 
     if (isLoading) {
         return <ProductDetailSkeleton />;
@@ -28,9 +60,6 @@ export default function ProductDetailPage() {
     if (!product) {
         return <div className="container mx-auto text-center py-20">Product not found.</div>;
     }
-
-    const increaseQuantity = () => setQuantity(prev => prev + 1);
-    const decreaseQuantity = () => setQuantity(prev => Math.max(1, prev - 1));
 
     return (
         <div className="container mx-auto px-4 py-12 md:py-16">
@@ -77,7 +106,7 @@ export default function ProductDetailPage() {
                             <span className="w-12 text-center font-bold text-lg">{quantity}</span>
                             <Button variant="ghost" size="icon" onClick={increaseQuantity}><Plus className="w-4 h-4" /></Button>
                         </div>
-                        <Button size="lg" className="flex-grow">
+                        <Button size="lg" className="flex-grow" onClick={handleAddToCart}>
                             <ShoppingCart className="mr-2 h-5 w-5" />
                             Add to Cart
                         </Button>
@@ -116,4 +145,3 @@ function ProductDetailSkeleton() {
         </div>
     );
 }
-

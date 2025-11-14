@@ -4,12 +4,17 @@ import { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Search } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import type { Product } from '@/lib/definitions';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useUser, useFirestore } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ProductGrid({ products }: { products: Product[] }) {
   const [searchTerm, setSearchTerm] = useState('');
@@ -75,6 +80,31 @@ export default function ProductGrid({ products }: { products: Product[] }) {
 }
 
 function ProductCard({ product }: { product: Product }) {
+    const { user } = useUser();
+    const firestore = useFirestore();
+    const { toast } = useToast();
+    const router = useRouter();
+
+    const handleAddToCart = () => {
+        if (!user) {
+            router.push('/login');
+            return;
+        }
+        const cartItemRef = doc(firestore, `carts/${user.uid}/items/${product.id}`);
+        const cartItemData = {
+            productId: product.id,
+            name: product.name,
+            price: product.price,
+            imageUrl: product.imageUrl,
+            quantity: 1,
+        };
+        setDocumentNonBlocking(cartItemRef, cartItemData, { merge: true });
+        toast({
+            title: "Added to Cart",
+            description: `${product.name} has been added to your cart.`,
+        });
+    };
+    
     return (
       <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 flex flex-col animate-in fade-in-50 hover:-translate-y-2 group">
         <CardHeader className="p-0">
@@ -96,7 +126,7 @@ function ProductCard({ product }: { product: Product }) {
           <p className="mt-4 text-lg font-semibold text-primary">₹{product.price.toFixed(2)}</p>
         </CardContent>
         <CardFooter className="p-4 pt-0">
-          <Button className="w-full" variant="default">Add to Cart</Button>
+          <Button className="w-full" variant="default" onClick={handleAddToCart}>Add to Cart</Button>
         </CardFooter>
       </Card>
     );

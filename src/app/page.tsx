@@ -6,9 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { ArrowRight, ChefHat, PartyPopper, Truck } from 'lucide-react';
 import type { Product } from '@/lib/definitions';
-import { useCollection, useMemoFirebase } from '@/firebase';
-import { collection, limit, query } from 'firebase/firestore';
+import { useCollection, useMemoFirebase, useUser } from '@/firebase';
+import { collection, doc, limit, query } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 const heroImage = PlaceHolderImages.find(img => img.id === 'home-hero');
 
@@ -110,6 +113,31 @@ export default function Home() {
 }
 
 function ProductCard({ product }: { product: Product }) {
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  const router = useRouter();
+
+  const handleAddToCart = () => {
+    if (!user) {
+        router.push('/login');
+        return;
+    }
+    const cartItemRef = doc(firestore, `carts/${user.uid}/items/${product.id}`);
+    const cartItemData = {
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        imageUrl: product.imageUrl,
+        quantity: 1,
+    };
+    setDocumentNonBlocking(cartItemRef, cartItemData, { merge: true });
+    toast({
+        title: "Added to Cart",
+        description: `${product.name} has been added to your cart.`,
+    });
+  };
+
   return (
     <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 group hover:-translate-y-2 flex flex-col">
       <CardHeader className="p-0">
@@ -131,7 +159,7 @@ function ProductCard({ product }: { product: Product }) {
         <p className="mt-4 text-xl font-semibold text-primary">₹{product.price.toFixed(2)}</p>
       </CardContent>
       <CardFooter className="p-6 pt-0">
-        <Button className="w-full" variant="outline">Add to Cart</Button>
+        <Button className="w-full" variant="outline" onClick={handleAddToCart}>Add to Cart</Button>
       </CardFooter>
     </Card>
   );
