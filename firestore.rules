@@ -39,11 +39,12 @@ service cloud.firestore {
       allow read, write: if isSignedIn() && isOwner(userId);
     }
 
-    // Orders can be created by any signed-in user.
-    // They can be read by the user who created the order or by an admin.
+    // Orders can be read by the user who created the order or by an admin.
+    // Users can list their own orders. Admins can list all orders.
     // Only admins can update the order status.
     match /orders/{orderId} {
-      allow read: if isSignedIn() && (isDataOwner(request.auth.uid) || isAdmin());
+      allow get: if isSignedIn() && (isDataOwner(request.auth.uid) || isAdmin());
+      allow list: if isSignedIn() && (isAdmin() || request.query.where.userId == request.auth.uid);
       allow create: if isSignedIn();
       allow update: if isSignedIn() && isAdmin();
       allow delete: if false; // Orders should probably not be deleted
