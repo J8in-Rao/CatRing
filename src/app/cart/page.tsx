@@ -1,6 +1,6 @@
 'use client';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, doc, writeBatch, serverTimestamp, getDocs } from "firebase/firestore";
+import { collection, doc, writeBatch, serverTimestamp, getDocs, addDoc } from "firebase/firestore";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -88,15 +88,18 @@ export default function CartPage() {
 
     try {
         const ordersRef = collection(firestore, "orders");
-        await addDoc(ordersRef, orderPayload);
+        // Using non-blocking update for consistency
+        addDocumentNonBlocking(ordersRef, orderPayload);
         
         // Clear the cart after order placement
-        const cartSnapshot = await getDocs(cartItemsRef);
-        const batch = writeBatch(firestore);
-        cartSnapshot.docs.forEach(doc => {
-            batch.delete(doc.ref);
-        });
-        await batch.commit();
+        if (cartItemsRef) {
+            const cartSnapshot = await getDocs(cartItemsRef);
+            const batch = writeBatch(firestore);
+            cartSnapshot.docs.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+            await batch.commit();
+        }
 
         toast({
             title: "Order Placed!",
@@ -112,6 +115,7 @@ export default function CartPage() {
             title: "Order Failed",
             description: "There was a problem placing your order. Please try again.",
         });
+    } finally {
         setIsPlacingOrder(false);
     }
   };
