@@ -30,7 +30,7 @@ export type Order = {
   userId: string;
   items: OrderItem[];
   totalAmount: number;
-  status: "Pending" | "Accepted" | "Processing" | "Out For Delivery" | "Completed";
+  status: "Pending" | "Accepted" | "Processing" | "Out For Delivery" | "Completed" | "Cancelled";
   createdAt: FieldValue;
   address: string;
 };

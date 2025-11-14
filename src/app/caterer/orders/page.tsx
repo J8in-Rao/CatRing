@@ -21,7 +21,7 @@ function formatTimestamp(timestamp: any): string {
     });
 }
 
-const ORDER_STATUSES: Order['status'][] = ["Pending", "Accepted", "Processing", "Out For Delivery", "Completed"];
+const ORDER_STATUSES: Order['status'][] = ["Pending", "Accepted", "Processing", "Out For Delivery", "Completed", "Cancelled"];
 
 
 export default function CatererOrdersPage() {
@@ -63,7 +63,11 @@ export default function CatererOrdersPage() {
                             <div className="flex items-center gap-4">
                                 <Badge 
                                     variant={order.status === 'Completed' ? 'default' : 'secondary'}
-                                    className={`text-sm ${order.status === 'Completed' ? 'bg-green-100 text-green-800' : ''}`}
+                                    className={`text-sm ${
+                                        order.status === 'Completed' ? 'bg-green-100 text-green-800' : ''
+                                    } ${
+                                        order.status === 'Cancelled' ? 'bg-red-100 text-red-800' : ''
+                                    }`}
                                 >
                                     {order.status}
                                 </Badge>
