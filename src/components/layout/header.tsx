@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, ShoppingCart, User, LogOut } from 'lucide-react';
+import { Menu, ShoppingCart, User, LogOut, Utensils, ClipboardList } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Logo } from '@/components/Logo';
@@ -13,19 +13,34 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useDoc, useFirestore, useMemoFirebase, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import { User as UserProfile } from '@/lib/definitions';
+import { doc } from 'firebase/firestore';
 
-const navLinks = [
+const userNavLinks = [
   { href: '/products', label: 'Menu' },
-  { href: '/caterer/orders', label: 'Caterer Orders' },
 ];
+
+const adminNavLinks = [
+    { href: '/caterer/orders', label: 'Incoming Orders', icon: ClipboardList },
+    { href: '/caterer/products', label: 'Manage My Products', icon: Utensils },
+]
 
 export function Header() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
+  const firestore = useFirestore();
+
+  const userProfileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, `users/${user.uid}`);
+  }, [firestore, user]);
+  const { data: userProfile } = useDoc<UserProfile>(userProfileRef);
+
+  const isAdmin = userProfile?.role === 'admin';
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -53,7 +68,7 @@ export function Header() {
                   <Logo />
                 </div>
                 <nav className="mt-6 flex flex-col gap-2 p-4">
-                  {navLinks.map((link) => (
+                  {userNavLinks.map((link) => (
                     <Link
                       key={link.href}
                       href={link.href}
@@ -62,6 +77,21 @@ export function Header() {
                       {link.label}
                     </Link>
                   ))}
+                   {isAdmin && (
+                    <>
+                        <div className="px-4 mt-4 mb-2 text-xs uppercase text-muted-foreground">Caterer Menu</div>
+                         {adminNavLinks.map((link) => (
+                            <Link
+                                key={link.href}
+                                href={link.href}
+                                className="flex items-center gap-3 text-lg font-medium text-foreground hover:text-primary transition-colors px-4 py-2 rounded-md hover:bg-muted"
+                            >
+                                <link.icon className="h-5 w-5" />
+                                {link.label}
+                            </Link>
+                        ))}
+                    </>
+                   )}
                 </nav>
               </div>
             </SheetContent>
@@ -72,10 +102,15 @@ export function Header() {
            <div className="w-full flex-1 md:w-auto md:flex-none">
            </div>
           <nav className="hidden md:flex items-center gap-2">
-            {navLinks.map((link) => (
+            {userNavLinks.map((link) => (
               <Button key={link.href} asChild variant="link" className="text-foreground">
                 <Link href={link.href}>{link.label}</Link>
               </Button>
+            ))}
+            {isAdmin && adminNavLinks.map((link) => (
+                <Button key={link.href} asChild variant="link" className="text-foreground">
+                    <Link href={link.href}>{link.label}</Link>
+                </Button>
             ))}
           </nav>
 
