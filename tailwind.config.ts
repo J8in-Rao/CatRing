@@ -10,7 +10,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['PT Sans', 'sans-serif'],
+        body: ['Inter', 'sans-serif'],
         headline: ['Playfair Display', 'serif'],
         code: ['monospace'],
         cursive: ['var(--font-sacramento)', 'cursive'],
