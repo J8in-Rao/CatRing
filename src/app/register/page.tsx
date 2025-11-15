@@ -10,12 +10,13 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { useAuth, useFirestore } from "@/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { doc, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { logAction } from "@/lib/logger";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name is too short"),
@@ -57,8 +58,12 @@ export default function RegisterPage() {
           createdAt: serverTimestamp(),
         };
         
-        // Use non-blocking write
         setDocumentNonBlocking(userRef, userData, { merge: false });
+
+        logAction(firestore, 'REGISTER', {
+          userId: user.uid,
+          description: `New ${values.role} '${values.name}' registered with email ${values.email}.`,
+        });
 
         toast({
           title: "Account Created",
@@ -129,7 +134,7 @@ export default function RegisterPage() {
                         className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {showPassword ? <EyeOff /> : <Eye />}
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </Button>
                     </div>
                     <FormMessage />

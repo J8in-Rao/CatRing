@@ -28,6 +28,7 @@ import { Product } from '@/lib/definitions';
 import { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { setDocumentNonBlocking, addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { logAction } from '@/lib/logger';
 
 const formSchema = z.object({
   name: z.string().min(3, 'Product name must be at least 3 characters.'),
@@ -83,6 +84,12 @@ export default function ProductForm({ isOpen, setIsOpen, product }: ProductFormP
         // Update existing product
         const productRef = doc(firestore, 'products', product.id);
         setDocumentNonBlocking(productRef, values, { merge: true });
+        
+        logAction(firestore, 'UPDATE_PRODUCT', {
+          userId: user.uid,
+          description: `Admin updated product '${values.name}' (ID: ${product.id}).`,
+        });
+
         toast({
           title: 'Product Updated',
           description: `${values.name} has been successfully updated.`,
@@ -95,7 +102,13 @@ export default function ProductForm({ isOpen, setIsOpen, product }: ProductFormP
           createdBy: user.uid,
           createdAt: serverTimestamp(),
         };
-        addDocumentNonBlocking(productsRef, newProductData);
+        const newDoc = await addDocumentNonBlocking(productsRef, newProductData);
+
+        logAction(firestore, 'CREATE_PRODUCT', {
+          userId: user.uid,
+          description: `Admin created product '${values.name}' (ID: ${newDoc.id}).`,
+        });
+
         toast({
           title: 'Product Added',
           description: `${values.name} has been successfully added to your menu.`,

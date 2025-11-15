@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { useDoc } from "@/firebase/firestore/use-doc";
 import { useState } from "react";
+import { logAction } from "@/lib/logger";
 
 export default function CartPage() {
   const { user } = useUser();
@@ -88,9 +89,13 @@ export default function CartPage() {
 
     try {
         const ordersRef = collection(firestore, "orders");
-        // Using non-blocking update for consistency
-        addDocumentNonBlocking(ordersRef, orderPayload);
+        const newOrder = await addDocumentNonBlocking(ordersRef, orderPayload);
         
+        logAction(firestore, 'CREATE_ORDER', {
+          userId: user.uid,
+          description: `User created order #${newOrder.id} for ₹${total.toFixed(2)}.`,
+        });
+
         // Clear the cart after order placement
         if (cartItemsRef) {
             const cartSnapshot = await getDocs(cartItemsRef);

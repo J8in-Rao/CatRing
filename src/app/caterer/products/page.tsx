@@ -28,6 +28,7 @@ import {
 import { deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { logAction } from "@/lib/logger";
 
 export default function CatererProductsPage() {
     const { user } = useUser();
@@ -65,9 +66,15 @@ export default function CatererProductsPage() {
     };
 
     const handleDeleteProduct = () => {
-        if (!productToDelete || !firestore) return;
+        if (!productToDelete || !firestore || !user) return;
         const productRef = doc(firestore, 'products', productToDelete.id);
         deleteDocumentNonBlocking(productRef);
+
+        logAction(firestore, 'DELETE_PRODUCT', {
+            userId: user.uid,
+            description: `Admin deleted product '${productToDelete.name}' (ID: ${productToDelete.id}).`,
+        });
+
         toast({
             title: "Product Deleted",
             description: `${productToDelete.name} has been removed.`,

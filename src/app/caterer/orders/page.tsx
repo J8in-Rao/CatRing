@@ -1,5 +1,5 @@
 'use client';
-import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, orderBy, query } from "firebase/firestore";
 import { Order } from "@/lib/definitions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Badge } from "@/components/ui/badge";
+import { logAction } from "@/lib/logger";
 
 function formatTimestamp(timestamp: any): string {
     if (!timestamp || !timestamp.toDate) {
@@ -26,6 +27,7 @@ const ORDER_STATUSES: Order['status'][] = ["Pending", "Accepted", "Processing", 
 
 export default function CatererOrdersPage() {
     const firestore = useFirestore();
+    const { user } = useUser();
 
     const ordersQuery = useMemoFirebase(() => {
         if (!firestore) return null;
@@ -35,9 +37,14 @@ export default function CatererOrdersPage() {
     const { data: orders, isLoading } = useCollection<Omit<Order, 'id'>>(ordersQuery);
 
     const handleStatusChange = (orderId: string, newStatus: Order['status']) => {
-        if (!firestore) return;
+        if (!firestore || !user) return;
         const orderRef = doc(firestore, 'orders', orderId);
         setDocumentNonBlocking(orderRef, { status: newStatus }, { merge: true });
+
+        logAction(firestore, 'UPDATE_ORDER_STATUS', {
+          userId: user.uid,
+          description: `Admin updated order #${orderId.slice(0,7)} to '${newStatus}'.`,
+        });
     };
     
     const hasOrders = !isLoading && orders && orders.length > 0;
