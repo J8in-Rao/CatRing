@@ -1,12 +1,12 @@
 'use client';
 import { useDoc, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, doc } from "firebase/firestore";
+import { collection, doc, getDoc } from "firebase/firestore";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Clock, Minus, Plus, ShoppingCart, Star } from "lucide-react";
-import { useState } from "react";
-import { Product } from "@/lib/definitions";
+import { Clock, Minus, Plus, ShoppingCart, Star, Utensils } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Product, User } from "@/lib/definitions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { useToast } from "@/hooks/use-toast";
@@ -17,14 +17,32 @@ export default function ProductDetailPage() {
     const { user } = useUser();
     const router = useRouter();
     const { toast } = useToast();
+    const [catererName, setCatererName] = useState('');
 
     const productRef = useMemoFirebase(() => {
         if (!firestore || !id) return null;
         return doc(firestore, `products/${id as string}`);
     }, [firestore, id]);
 
-    const { data: product, isLoading } = useDoc<Omit<Product, 'id'>>(productRef);
+    const { data: product, isLoading } = useDoc<Product>(productRef);
     const [quantity, setQuantity] = useState(1);
+
+    useEffect(() => {
+        const fetchCaterer = async () => {
+            if (product && firestore) {
+                const userRef = doc(firestore, "users", product.createdBy);
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists()) {
+                    const userData = userSnap.data() as User;
+                    setCatererName(userData.name);
+                } else {
+                    setCatererName("Unknown Caterer");
+                }
+            }
+        };
+
+        fetchCaterer();
+    }, [product, firestore]);
 
     const increaseQuantity = () => setQuantity(prev => prev + 1);
     const decreaseQuantity = () => setQuantity(prev => Math.max(1, prev - 1));
@@ -77,6 +95,12 @@ export default function ProductDetailPage() {
                     <div>
                         <p className="text-primary font-semibold">{product.category}</p>
                         <h1 className="font-headline text-4xl md:text-5xl font-bold mt-1">{product.name}</h1>
+                        {catererName && (
+                            <div className="flex items-center gap-2 text-lg text-muted-foreground mt-2">
+                                <Utensils className="w-5 h-5" />
+                                <span>by {catererName}</span>
+                            </div>
+                        )}
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1 text-yellow-500">

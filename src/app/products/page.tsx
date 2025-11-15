@@ -1,18 +1,52 @@
 'use client';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import ProductGrid from './_components/product-grid';
-import { collection } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Product } from '@/lib/definitions';
+import { Product, User } from '@/lib/definitions';
+import { useEffect, useState } from 'react';
 
 export default function ProductsPage() {
   const firestore = useFirestore();
-  const productsCollection = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'products');
-  }, [firestore]);
-  
-  const { data: allProducts, isLoading } = useCollection<Omit<Product, 'id'>>(productsCollection);
+  const [productsWithCaterers, setProductsWithCaterers] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProductsAndCaterers = async () => {
+        if (!firestore) return;
+        setIsLoading(true);
+        
+        const productsCollection = collection(firestore, 'products');
+        const productSnap = await getDocs(productsCollection);
+        const allProducts: Product[] = productSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+
+        if (allProducts.length === 0) {
+            setProductsWithCaterers([]);
+            setIsLoading(false);
+            return;
+        }
+
+        const catererIds = [...new Set(allProducts.map(p => p.createdBy))];
+        const usersRef = collection(firestore, 'users');
+        const q = query(usersRef, where('__name__', 'in', catererIds));
+        const userSnap = await getDocs(q);
+        const catererMap = new Map(userSnap.docs.map(doc => [doc.id, doc.data() as User]));
+
+        const products = allProducts.map(product => {
+            const caterer = catererMap.get(product.createdBy);
+            return {
+                ...product,
+                catererName: caterer?.name || 'Unknown Caterer',
+            };
+        });
+
+        setProductsWithCaterers(products);
+        setIsLoading(false);
+    };
+
+    fetchProductsAndCaterers();
+}, [firestore]);
+
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-16">
@@ -38,7 +72,7 @@ export default function ProductsPage() {
         </div>
         </>
       )}
-      {allProducts && <ProductGrid products={allProducts} />}
+      {!isLoading && <ProductGrid products={productsWithCaterers} />}
     </div>
   );
 }

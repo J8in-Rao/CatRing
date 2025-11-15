@@ -1,7 +1,7 @@
 'use client';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, doc, orderBy, query } from "firebase/firestore";
-import { Order } from "@/lib/definitions";
+import { collection, doc, orderBy, query, where } from "firebase/firestore";
+import { Order, Product } from "@/lib/definitions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UtensilsCrossed } from "lucide-react";
@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { setDocumentNonBlocking } from "@/firebase/non-blocking-updates";
 import { Badge } from "@/components/ui/badge";
 import { logAction } from "@/lib/logger";
+import { useMemo } from "react";
 
 function formatTimestamp(timestamp: any): string {
     if (!timestamp || !timestamp.toDate) {
@@ -29,12 +30,26 @@ export default function CatererOrdersPage() {
     const firestore = useFirestore();
     const { user } = useUser();
 
-    const ordersQuery = useMemoFirebase(() => {
+    const allOrdersQuery = useMemoFirebase(() => {
         if (!firestore) return null;
         return query(collection(firestore, 'orders'), orderBy('createdAt', 'desc'));
     }, [firestore]);
 
-    const { data: orders, isLoading } = useCollection<Omit<Order, 'id'>>(ordersQuery);
+    const catererProductsQuery = useMemoFirebase(() => {
+        if(!user || !firestore) return null;
+        return query(collection(firestore, 'products'), where('createdBy', '==', user.uid));
+    }, [user, firestore]);
+
+    const { data: allOrders, isLoading: isLoadingOrders } = useCollection<Order>(allOrdersQuery);
+    const { data: catererProducts, isLoading: isLoadingProducts } = useCollection<Product>(catererProductsQuery);
+
+    const catererOrders = useMemo(() => {
+        if (!allOrders || !catererProducts) return [];
+        const catererProductIds = new Set(catererProducts.map(p => p.id));
+        return allOrders.filter(order => 
+            order.items.some(item => catererProductIds.has(item.productId))
+        );
+    }, [allOrders, catererProducts]);
 
     const handleStatusChange = (orderId: string, newStatus: Order['status']) => {
         if (!firestore || !user) return;
@@ -47,7 +62,8 @@ export default function CatererOrdersPage() {
         });
     };
     
-    const hasOrders = !isLoading && orders && orders.length > 0;
+    const isLoading = isLoadingOrders || isLoadingProducts;
+    const hasOrders = !isLoading && catererOrders && catererOrders.length > 0;
 
   return (
     <div className="container mx-auto px-4 py-12 md:py-16">
@@ -59,7 +75,7 @@ export default function CatererOrdersPage() {
             </div>
         ) : hasOrders ? (
            <div className="space-y-8">
-                {orders.map((order) => (
+                {catererOrders.map((order) => (
                     <Card key={order.id} className="shadow-md">
                         <CardHeader className="flex flex-row items-start justify-between gap-4">
                             <div>

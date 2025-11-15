@@ -7,6 +7,8 @@ export type Product = {
   price: number;
   imageUrl: string;
   category: string;
+  createdBy: string;
+  catererName?: string;
 };
 
 export type CartItem = {
@@ -36,6 +38,7 @@ export type Order = {
 };
 
 export type User = {
+    id: string;
     name: string;
     email: string;
     role: 'user' | 'admin';

@@ -4,30 +4,59 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { ArrowRight, ChefHat, PartyPopper, Truck } from 'lucide-react';
-import type { Product } from '@/lib/definitions';
+import { ArrowRight, ChefHat, PartyPopper, Truck, Utensils } from 'lucide-react';
+import type { Product, User } from '@/lib/definitions';
 import { useCollection, useMemoFirebase, useUser } from '@/firebase';
-import { collection, doc, limit, query } from 'firebase/firestore';
+import { collection, doc, getDocs, limit, query, where } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 const heroImage = PlaceHolderImages.find(img => img.id === 'home-hero');
 
 export default function Home() {
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const firestore = useFirestore();
-  const productsCollection = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'products');
+
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      if (!firestore) return;
+      setIsLoading(true);
+
+      const productsQuery = query(collection(firestore, 'products'), limit(3));
+      const productSnap = await getDocs(productsQuery);
+      const productsData: Product[] = productSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
+
+      if (productsData.length === 0) {
+        setFeaturedProducts([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      const catererIds = [...new Set(productsData.map(p => p.createdBy))];
+      const usersRef = collection(firestore, 'users');
+      const q = query(usersRef, where('__name__', 'in', catererIds));
+      const userSnap = await getDocs(q);
+      const catererMap = new Map(userSnap.docs.map(doc => [doc.id, doc.data() as User]));
+
+      const productsWithCaterers = productsData.map(product => {
+        const caterer = catererMap.get(product.createdBy);
+        return {
+          ...product,
+          catererName: caterer?.name || 'Unknown Caterer',
+        };
+      });
+
+      setFeaturedProducts(productsWithCaterers);
+      setIsLoading(false);
+    }
+    
+    fetchFeatured();
   }, [firestore]);
 
-  const featuredProductsQuery = useMemoFirebase(() => {
-    if(!productsCollection) return null;
-    return query(productsCollection, limit(3))
-  }, [productsCollection])
-
-  const { data: featuredProducts, isLoading } = useCollection<Omit<Product, 'id'>>(featuredProductsQuery);
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)]">
@@ -123,6 +152,7 @@ function ProductCard({ product }: { product: Product }) {
         router.push('/login');
         return;
     }
+    if (!firestore) return;
     const cartItemRef = doc(firestore, `carts/${user.uid}/items/${product.id}`);
     const cartItemData = {
         productId: product.id,
@@ -152,7 +182,10 @@ function ProductCard({ product }: { product: Product }) {
         </Link>
       </CardHeader>
       <CardContent className="p-6 flex-grow">
-        <p className="text-sm text-muted-foreground">{product.category}</p>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+            <Utensils className="w-3 h-3" />
+            <span>{product.catererName}</span>
+        </div>
         <CardTitle className="font-headline text-2xl mt-1">
           <Link href={`/products/${product.id}`}>{product.name}</Link>
         </CardTitle>

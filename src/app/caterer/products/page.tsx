@@ -48,7 +48,7 @@ export default function CatererProductsPage() {
         );
     }, [user, firestore]);
 
-    const { data: products, isLoading } = useCollection<Omit<Product, 'id'>>(productsQuery);
+    const { data: products, isLoading } = useCollection<Product>(productsQuery);
 
     const openAddForm = () => {
         setSelectedProduct(null);

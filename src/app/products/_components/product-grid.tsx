@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Search } from 'lucide-react';
+import { Search, Utensils } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import type { Product } from '@/lib/definitions';
@@ -119,10 +119,14 @@ function ProductCard({ product }: { product: Product }) {
           </Link>
         </CardHeader>
         <CardContent className="p-4 flex-grow">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+            <Utensils className="w-3 h-3" />
+            <span>{product.catererName}</span>
+          </div>
           <CardTitle className="font-headline text-xl">
             <Link href={`/products/${product.id}`}>{product.name}</Link>
           </CardTitle>
-          <p className="mt-2 text-sm text-muted-foreground h-10">{product.description}</p>
+          <p className="mt-2 text-sm text-muted-foreground h-10 line-clamp-2">{product.description}</p>
           <p className="mt-4 text-lg font-semibold text-primary">₹{product.price.toFixed(2)}</p>
         </CardContent>
         <CardFooter className="p-4 pt-0">
