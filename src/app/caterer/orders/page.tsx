@@ -43,13 +43,25 @@ export default function CatererOrdersPage() {
     const { data: allOrders, isLoading: isLoadingOrders } = useCollection<Order>(allOrdersQuery);
     const { data: catererProducts, isLoading: isLoadingProducts } = useCollection<Product>(catererProductsQuery);
 
+    const catererProductIds = useMemo(() => {
+        if (!catererProducts) return new Set();
+        return new Set(catererProducts.map(p => p.id));
+    }, [catererProducts]);
+
     const catererOrders = useMemo(() => {
         if (!allOrders || !catererProducts) return [];
-        const catererProductIds = new Set(catererProducts.map(p => p.id));
         return allOrders.filter(order => 
             order.items.some(item => catererProductIds.has(item.productId))
-        );
-    }, [allOrders, catererProducts]);
+        ).map(order => {
+            const relevantItems = order.items.filter(item => catererProductIds.has(item.productId));
+            const relevantTotal = relevantItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            return {
+                ...order,
+                items: relevantItems, // a subset of original items
+                totalAmount: relevantTotal, // a sub-total, not the original total
+            };
+        });
+    }, [allOrders, catererProducts, catererProductIds]);
 
     const handleStatusChange = (orderId: string, newStatus: Order['status']) => {
         if (!firestore || !user) return;
@@ -119,7 +131,7 @@ export default function CatererOrdersPage() {
                             </div>
                         </CardContent>
                         <CardFooter className="bg-muted/50 p-4 flex justify-end">
-                            <p className="text-lg font-bold">Total: ₹{order.totalAmount.toFixed(2)}</p>
+                            <p className="text-lg font-bold">Your Sub-Total: ₹{order.totalAmount.toFixed(2)}</p>
                         </CardFooter>
                     </Card>
                 ))}
