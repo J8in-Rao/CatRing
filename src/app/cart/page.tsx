@@ -1,6 +1,6 @@
 'use client';
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, doc, writeBatch, serverTimestamp, getDocs, addDoc } from "firebase/firestore";
+import { collection, doc, writeBatch, serverTimestamp, getDocs } from "firebase/firestore";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
