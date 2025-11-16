@@ -193,6 +193,10 @@ The codebase is organized using the Next.js App Router conventions, which group 
 | **TC10**| A user cannot write to another user's cart. | The write request is denied by Firestore Security Rules. |
 | **TC11**| A non-admin cannot create a product. | The write request to the `/products` collection is denied. |
 
+
+## 7. Live website
+https://cat-ring.vercel.app/
+
 ---
 
 ## 7. Setup and Execution
@@ -201,8 +205,8 @@ To run this project locally, follow these steps:
 
 1.  **Clone the Repository**:
     ```bash
-    git clone <your-github-repo-url>
-    cd <repo-name>
+    git clone https://github.com/J8in-Rao/CatRing
+    cd CatRing
     ```
 
 2.  **Install Dependencies**:

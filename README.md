@@ -101,6 +101,11 @@ The Firestore database is structured into five top-level collections:
 6.  The caterer uses the dropdown to update the order status from "Pending" to "Accepted", and so on, until it is "Completed".
 7.  The caterer visits their "Dashboard" to see updated revenue and order count metrics.
 
+
+### 3. Live Website
+
+        https://cat-ring.vercel.app/
+
 ---
 
 ## Getting Started (Local Development)
@@ -110,8 +115,8 @@ To run this project locally, follow these steps:
 1.  **Clone the Repository**:
     ```bash
     # (Instruction for the user to clone their own public GitHub repo)
-    git clone <your-github-repo-url>
-    cd <repo-name>
+    git clone https://github.com/J8in-Rao/CatRing
+    cd CatRing
     ```
 
 2.  **Install Dependencies**:
